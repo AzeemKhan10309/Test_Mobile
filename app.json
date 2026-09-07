@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "mobile",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "mobileapp",
+    "userInterfaceStyle": "automatic",
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.yourorg.mobile" },
+    "android": { "package": "com.yourorg.mobile" },
+    "plugins": ["expo-secure-store"]
+  }
+}
