@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import React from 'react';
 
 import TeacherDashboardScreen from '../screens/teacher/TeacherDashboardScreen';
@@ -99,10 +100,28 @@ function MoreStack() {
 
 export default function TeacherNavigator() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary }}>
-      <Tab.Screen name="Dashboard" component={DashboardStack} />
+<Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: { height: 64, paddingTop: 6, borderTopColor: colors.border },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarIcon: ({ color, size }) => {
+          const icons: Record<string, string> = {
+            Dashboard: 'home-outline',
+            Tests: 'document-text-outline',
+            Courses: 'people-outline',
+            Chat: 'chatbubble-outline',
+            More: 'grid-outline',
+          };
+          return <Ionicons name={icons[route.name] as any} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Dashboard" component={DashboardStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Tests" component={TestsStack} />
-      <Tab.Screen name="Courses" component={CoursesStack} />
+    <Tab.Screen name="Courses" component={CoursesStack} options={{ tabBarLabel: 'Students' }} />
       <Tab.Screen name="Chat" component={ChatStack} />
       <Tab.Screen name="More" component={MoreStack} />
     </Tab.Navigator>

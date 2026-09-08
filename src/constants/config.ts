@@ -6,16 +6,42 @@ import { API_BASE_URL } from '@env';
  * about the prefix and we never accidentally produce /api/api.
  */
 function normalizeBaseUrl(raw: string | undefined): string {
-  const fallback = 'http://localhost:5000';
-  const base = (raw || fallback).replace(/\/+$/, ''); // strip trailing slashes
-  return base;
+const base = raw?.trim();
+
+  // Never silently fall back to localhost: on a physical device that makes a
+  // missing/stale environment variable look like a network failure.
+  if (!base) {
+    throw new Error('API_BASE_URL is missing. Set it in .env and restart Expo with `npx expo start -c`.');
+  }
+  if (base.startsWith('API_BASE_URL=')) {
+    throw new Error('API_BASE_URL must contain only the URL, not `API_BASE_URL=` twice.');
+  }
+
+  let url: URL;
+  try {
+    url = new URL(base);
+  } catch {
+    throw new Error('API_BASE_URL must be a complete http(s) URL.');
+  }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+    throw new Error('API_BASE_URL must use http or https.');
+  }
+
+  // Accept either the documented backend root or a pasted URL ending in
+  // /api, but expose one canonical root so API_URL can never be /api/api.
+  const path = url.pathname.replace(/\/+$/, '').replace(/\/api$/, '');
+  return `${url.origin}${path}`.replace(/\/+$/, '');
 }
 
 export const RAW_BASE_URL = normalizeBaseUrl(API_BASE_URL);
 export const API_URL = `${RAW_BASE_URL}/api`;
 export const HEALTH_URL = `${RAW_BASE_URL}/health`;
 export const UPLOADS_URL = `${RAW_BASE_URL}/uploads`;
-
+if (__DEV__) {
+  // Safe diagnostic: this is a public server address, not a credential.
+  console.log('API Base URL:', RAW_BASE_URL);
+  console.log('API URL:', API_URL);
+}
 export const QUERY_KEYS = {
   me: ['auth', 'me'] as const,
   tests: (params?: unknown) => ['tests', params] as const,

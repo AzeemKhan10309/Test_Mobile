@@ -24,7 +24,9 @@ export const api: AxiosInstance = axios.create({
   withCredentials: true, // carries the httpOnly refresh-token cookie
   headers: { 'Content-Type': 'application/json' },
 });
-
+function isLoginRequest(config: InternalAxiosRequestConfig): boolean {
+  return config.url?.replace(/^\/+/, '') === 'auth/login';
+}
 let isRefreshing = false;
 let pendingQueue: Array<{
   resolve: (token: string) => void;
@@ -50,14 +52,30 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  if (__DEV__ && isLoginRequest(config)) {
+    // getUri resolves Axios's baseURL and request path without logging body,
+    // passwords, cookies, or authorization headers.
+    console.log('Login request URL:', api.getUri(config));
+    console.log('Login request method:', config.method?.toUpperCase());
+  }
   return config;
 });
-
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (__DEV__ && isLoginRequest(response.config)) {
+      console.log('Login response status:', response.status);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
-
+    if (__DEV__ && originalRequest && isLoginRequest(originalRequest)) {
+      // Backend error messages are useful for diagnosis. Deliberately do not
+      // log request data, response headers, cookies, or bearer tokens.
+      const responseMessage = (error.response?.data as { message?: unknown } | undefined)?.message;
+      console.log('Login API error:', responseMessage || error.message);
+      if (error.response) console.log('Login response status:', error.response.status);
+    }
     const isAuthRoute =
       originalRequest?.url?.includes('/auth/login') ||
       originalRequest?.url?.includes('/auth/refresh') ||

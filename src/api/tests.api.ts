@@ -1,5 +1,5 @@
 import { api, unwrap } from './client';
-import { PaginatedResponse, Test } from '../types';
+import { PaginatedResponse, Question, Test } from '../types';
 
 export const testsAPI = {
   getAll: (params?: { status?: string; page?: number; limit?: number }) =>
@@ -23,7 +23,7 @@ export const testsAPI = {
     api.get(`/tests/join/${shareLink}`).then((r) => unwrap<Test>(r.data)),
 
   getQuestions: (id: string) =>
-    api.get(`/tests/${id}/questions`).then((r) => unwrap(r.data)),
+        api.get(`/tests/${id}/questions`).then((r) => unwrap<Question[]>(r.data)),
 
   getStudents: (id: string) =>
     api.get(`/tests/${id}/students`).then((r) => unwrap(r.data)),
